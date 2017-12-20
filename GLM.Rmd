@@ -1,0 +1,53 @@
+---
+title: "Generalized Linear Model"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Modelling a dataset using the generalized linear model.  A GLM can compare a response to one or more predictors.  It is similar to linear regression and ANOVAs but can be used on non-normal data.
+
+Therefore use this model when:      
+
+* data is not normally distributed      
+* variance of response variable depends on the mean     
+* the GLM can be fit a distriubtion without perfroming tranformations (e.g. log transform)    
+  
+Compare 80 individuals and see how effective each of the 3 different drugs are compared to a control group. The respose can is either 1 = cured or 2 = not cured, therefore, GLM can be used to fit the binomial distribution.
+
+```{r data}
+response <- c(1,0,0,0,1,0,0,1,0,0,0,0,0,0,1,0,0,0,1,0,1,0,0,0,1,0,0,1,0,0,1,0,0,0,1,0,0,0,1,0,1,0,0,0,1,0,0,1,1,1,1,1,0,0,1,0,1,1,1,0,1,0,0,0,1,0,1,1,1,1,1,1,1,1,1,0,1,1,1,1)
+predictor <- c(rep("control",20),rep("drug1",20),rep("drug2",20),rep("drug3",20))
+drug.trial <- data.frame(predictor,response)
+```
+
+Creating the GLM model
+
+```{r model}
+m2<- glm(response~predictor, data=drug.trial, family="binomial")
+
+summary(m2) 
+```
+
+Essentially the results show the comparsion of each drug againts the control.
+Also want to determine which drug is the best.
+First, the chisquare test is used to determine if the significance is significantly different from zero.
+
+```{r chisq}
+anova(m2, test="Chisq") ## chisq test on predictor from model
+```
+
+To determine which drug is most effective, use pairwise comparisons.
+
+```{r warning=FALSE}
+#install.packages("lsmeans")
+library(emmeans)
+```
+
+```{r pairwise}
+emmeans(m2, pairwise~predictor, adjust="tukey") ##conduct pairwise comparisons on predictor
+```
+
+Look at the p-values to determine which predictors are significantly different from the control.  Since drug 3 has a p-value less than 0.05, this is the only drug that is significantly different from the control.  
